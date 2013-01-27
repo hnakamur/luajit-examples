@@ -1,15 +1,22 @@
 local ffi = require("ffi")
 local pt = ffi.load("pthread")
 
+if ffi.os == "Linux" then
+  if ffi.arch == "x64" then
+ffi.cdef[[
+    static const int __SIZEOF_PTHREAD_ATTR_T = 56;
+]]
+  else
+ffi.cdef[[
+    static const int __SIZEOF_PTHREAD_ATTR_T = 36;
+]]
+  end
+end
+
 ffi.cdef[[
 typedef uint64_t pthread_t;
 
-/* On a 64-bit system. */
-static const int __SIZEOF_PTHREAD_ATTR_T = 56;
-/* static const int __SIZEOF_PTHREAD_ATTR_T = 36; */
-
-typedef union
-{
+typedef union {
   int8_t __size[__SIZEOF_PTHREAD_ATTR_T];
   int64_t __align;
 } pthread_attr_t;
@@ -39,7 +46,7 @@ int lua_pcall(lua_State *L, int nargs, int nresults, int errfunc);
 
 static const int LUA_GLOBALSINDEX = -10002;
 void lua_getfield(lua_State *L, int index, const char *k);
-const void *lua_topointer(lua_State *L, int index);
+ptrdiff_t lua_tointeger(lua_State *L, int index);
 void lua_settop(lua_State *L, int index);
 ]]
 
@@ -49,27 +56,26 @@ local L = C.luaL_newstate()
 assert(L ~= nil)
 C.luaL_openlibs(L)
 assert(C.luaL_loadstring(L, [[
-function hello()
+local ffi = require("ffi")
+local function hello()
   print("Hello from another Lua state!")
 end
 
-print(hello)
+cb_hello = tonumber(ffi.cast('intptr_t', ffi.cast('void *(*)(void *)', hello)))
 ]]) == 0)
-assert(C.lua_pcall(L, 0, 1, 0) == 0)
+local res
+res = C.lua_pcall(L, 0, 1, 0)
+assert(res == 0)
 
-C.lua_getfield(L, C.LUA_GLOBALSINDEX, 'hello')
-local func_ptr = C.lua_topointer(L, -1);
-print('func_ptr', func_ptr)
+C.lua_getfield(L, C.LUA_GLOBALSINDEX, 'cb_hello')
+local func_ptr = C.lua_tointeger(L, -1);
 C.lua_settop(L, -2);
 
 threadA = ffi.new("pthread_t[1]")
-print("thread", threadA)
-print("thread[0]", threadA[0])
+res = pt.pthread_create(threadA, nil, ffi.cast("thread_func", func_ptr), nil)
+assert(res == 0)
 
-local res = pt.pthread_create(threadA, nil,
-  ffi.cast("thread_func", func_ptr), nil)
-print("A res", res)
-
-local res2 = pt.pthread_join(threadA[0], nil)
+res = pt.pthread_join(threadA[0], nil)
+assert(res == 0)
 
 C.lua_close(L)
