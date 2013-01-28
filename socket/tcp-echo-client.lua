@@ -7,9 +7,9 @@ print("fd", fd, "type(fd)", type(fd))
 
 local addr = t.sockaddr_in(3000, "0.0.0.0")
 
-local res
-res = S.connect(fd, addr)
-assert(res)
+local rc
+rc = S.connect(fd, addr)
+assert(rc)
 
 local str = "hello"
 local bytesWritten = S.write(fd, str)

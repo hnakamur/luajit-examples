@@ -5,19 +5,19 @@ local c, t = S.c, S.t
 local fd = S.socket(c.AF.INET, c.SOCK.STREAM, 0)
 print("fd", fd, "type(fd)", type(fd))
 
-local res
-res = S.setsockopt(fd, c.SOL.SOCKET, c.SO.REUSEADDR, true)
-print("setsockopt res", res, "type(res)", type(res))
-assert(res)
+local rc
+rc = S.setsockopt(fd, c.SOL.SOCKET, c.SO.REUSEADDR, true)
+print("setsockopt rc", rc, "type(rc)", type(rc))
+assert(rc)
 
 local addr = t.sockaddr_in(3000, "0.0.0.0")
 
-res = S.bind(fd, addr)
-print("bind res", res, "type(res)", type(res))
-assert(res)
+rc = S.bind(fd, addr)
+print("bind rc", rc, "type(rc)", type(rc))
+assert(rc)
 
-res = S.listen(fd)
-assert(res)
+rc = S.listen(fd)
+assert(rc)
 
 client = S.accept(fd, 0, addr)
 print("client.fd", client.fd)
