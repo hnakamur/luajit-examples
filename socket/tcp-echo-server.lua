@@ -27,7 +27,7 @@ local BUFSIZE = 8192
 local buf = ffi.new("uint8_t[?]", BUFSIZE)
 local EOT = 4
 while true do
-  local bytesRead = S.read(client.fd, buf, BUFSIZE)
+  local bytesRead = S.read(client.fd, buf, ffi.sizeof(buf))
   print("bytesRead", bytesRead)
   if bytesRead <= 0 then
     break
