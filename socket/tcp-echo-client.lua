@@ -1,29 +1,30 @@
 local ffi = require "ffi"
-local S = require "syscall"
-local c, t = S.c, S.t
+require "socket-cdef"
+local C = ffi.C
 
-local fd = S.socket(c.AF.INET, c.SOCK.STREAM, 0)
+local fd = C.socket(C.AF_INET, C.SOCK_STREAM, 0)
 print("fd", fd, "type(fd)", type(fd))
 
-local addr = t.sockaddr_in(3000, "0.0.0.0")
+local addr = ffi.new("struct sockaddr_in[1]")
+addr[0].sin_family = C.AF_INET
+addr[0].sin_port = C.htons(8000);
+C.inet_aton("127.0.0.1", addr[0].sin_addr)
 
-local rc
-rc = S.connect(fd, addr)
-assert(rc)
+local rc = C.connect(fd, ffi.cast("struct sockaddr *", addr), ffi.sizeof(addr))
+assert(rc == 0)
 
 local BUFSIZE = 8192
 local buf = ffi.new("uint8_t[?]", BUFSIZE)
 
 for _, str in ipairs{"hello", "goodbye"} do
-  local bytesWritten = S.write(fd, str)
-  print("bytesWritten", bytesWritten)
+  local bytes_written = C.write(fd, str, #str)
 
-  local bytesRead = S.read(fd, buf, BUFSIZE)
-  print("bytesRead", bytesRead)
-  if bytesRead > 0 then
-    local response = ffi.string(buf, bytesRead)
+  local bytes_read = C.read(fd, buf, ffi.sizeof(buf))
+  print("bytes_read", bytes_read)
+  if bytes_read > 0 then
+    local response = ffi.string(buf, bytes_read)
     print("response", response)
   end
 end
-
-S.close(fd)
+rc = C.close(fd)
+assert(rc == 0)
