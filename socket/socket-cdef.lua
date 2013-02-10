@@ -22,6 +22,7 @@ typedef uint32_t in_addr_t;
 struct in_addr {
   in_addr_t s_addr;
 };
+static const int INADDR_ANY = (in_addr_t)0x00000000;
 
 struct sockaddr {
   sa_family_t sin_family;
