@@ -11,10 +11,21 @@
 #define NEVENTS 16
 #define BUFSIZE 1024
 
-enum mystate {
-  MYSTATE_READ = 0,
-  MYSTATE_WRITE
-};
+static const char reply[] =
+"HTTP/1.0 200 OK\r\n"
+"Content-type: text/html\r\n"
+"Connection: close\r\n"
+"Content-Length: 82\r\n"
+"\r\n"
+"<html>\n"
+"<head>\n"
+"<title>performance test</title>\n"
+"</head>\n"
+"<body>\n"
+"test\n"
+"</body>\n"
+"</html>"
+;
 
 int
 main()
@@ -32,12 +43,14 @@ main()
     int fd;
     char buf[1024];
     int n;
-    int state;
   };
+  int on = 1;
 
   /* (1) */
   /* ã½ã±ããã®ä½æ */
   sock0 = socket(AF_INET, SOCK_STREAM, 0);
+
+  setsockopt(sock0, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
   /* ã½ã±ããã®è¨­å® */
   addr.sin_family = AF_INET;
   addr.sin_port = htons(12345);
@@ -75,12 +88,12 @@ main()
     }
 
     /* (5) */
-    printf("after epoll_wait : nfds=%dï¼¼n", nfds);
+    /* printf("after epoll_wait : nfds=%d\n", nfds); */
 
     for (i=0; i<nfds; i++) {
 
       struct clientinfo *ci = ev_ret[i].data.ptr;
-      printf("fd=%dï¼¼n", ci->fd);
+      /* printf("fd=%d\n", ci->fd); */
 
       if (ci->fd == sock0) {
         /* (6) */
@@ -92,7 +105,7 @@ main()
           return 1;
         }
 
-        printf("accept sock=%dï¼¼n", sock);
+        /* printf("accept sock=%d\n", sock); */
 
         memset(&ev, 0, sizeof(ev));
         ev.events = EPOLLIN | EPOLLONESHOT;
@@ -119,7 +132,6 @@ main()
             return 1;
           }
 
-          ci->state = MYSTATE_WRITE;
           ev_ret[i].events = EPOLLOUT;
 
           if (epoll_ctl(epfd, EPOLL_CTL_MOD, ci->fd, &ev_ret[i]) != 0) {
@@ -128,7 +140,7 @@ main()
           }
         } else if (ev_ret[i].events & EPOLLOUT) {
           /* (8) */
-          n = write(ci->fd, ci->buf, ci->n);
+          n = write(ci->fd, reply, sizeof(reply));
           if (n < 0) {
             perror("write");
             return 1;
