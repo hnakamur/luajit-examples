@@ -3,6 +3,13 @@ local ffi = require "ffi"
 ffi.cdef[[
 int epoll_create(int size);
 
+enum {
+  EPOLL_CLOEXEC = 02000000,
+  EPOLL_NONBLOCK = 04000
+};
+
+int epoll_create1(int size);
+
 static const int EPOLL_CTL_ADD = 1;
 static const int EPOLL_CTL_DEL = 2;
 static const int EPOLL_CTL_MOD = 3;
@@ -15,8 +22,8 @@ typedef union epoll_data {
 } epoll_data_t;
 
 struct epoll_event {
-  uint32_t events;	/* Epoll events */
-  epoll_data_t data;	/* User data variable */
+  uint32_t events;   /* Epoll events */
+  epoll_data_t data; /* User data variable */
 } /* __attribute__ ((__packed__)) */;
 
 enum EPOLL_EVENTS {
@@ -31,9 +38,10 @@ enum EPOLL_EVENTS {
   EPOLLERR = 0x008,
   EPOLLHUP = 0x010,
   EPOLLRDHUP = 0x2000,
-  EPOLLONESHOT = (1 << 30),
-  EPOLLET = (1 << 31)
+  EPOLLONESHOT = (1 << 30) /*,
+  EPOLLET = (1 << 31)*/
 };
+static const uint32_t EPOLLET = (1 << 31);
 
 int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
 

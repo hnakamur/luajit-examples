@@ -1,6 +1,6 @@
 local ffi = require "ffi"
-require "socket-cdef"
-require "epoll-cdef"
+require "cdef/socket"
+require "cdef/epoll"
 local C = ffi.C
 local bir = require "bit"
 

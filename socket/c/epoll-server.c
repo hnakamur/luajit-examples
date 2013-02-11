@@ -80,6 +80,22 @@ make_socket_non_blocking (int sfd)
 
 #define MAXEVENTS 64
 
+static const char reply[] =
+"HTTP/1.0 200 OK\r\n"
+"Content-type: text/html\r\n"
+"Connection: close\r\n"
+"Content-Length: 82\r\n"
+"\r\n"
+"<html>\n"
+"<head>\n"
+"<title>performance test</title>\n"
+"</head>\n"
+"<body>\n"
+"test\n"
+"</body>\n"
+"</html>"
+;
+
 int
 main (int argc, char *argv[])
 {
@@ -141,8 +157,8 @@ main (int argc, char *argv[])
               (!(events[i].events & EPOLLIN)))
 	    {
               /* An error has occured on this fd, or the socket is not
- *                  ready for reading (why were we notified then?) */
-	      fprintf (stderr, "epoll error\n");
+               * ready for reading (why were we notified then?) */
+	      fprintf (stderr, "epoll error. events=%u\n", events[i].events);
 	      close (events[i].data.fd);
 	      continue;
 	    }
@@ -156,17 +172,21 @@ main (int argc, char *argv[])
                   struct sockaddr in_addr;
                   socklen_t in_len;
                   int infd;
+#if 0
                   char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+#endif
 
                   in_len = sizeof in_addr;
                   infd = accept (sfd, &in_addr, &in_len);
                   if (infd == -1)
                     {
+printf("errno=%d, EAGAIN=%d, EWOULDBLOCK=%d\n", errno, EAGAIN, EWOULDBLOCK);
                       if ((errno == EAGAIN) ||
                           (errno == EWOULDBLOCK))
                         {
                           /* We have processed all incoming
                            * connections. */
+                          printf ("processed all incoming connections.\n");
                           break;
                         }
                       else
@@ -176,6 +196,7 @@ main (int argc, char *argv[])
                         }
                     }
 
+#if 0
                   s = getnameinfo (&in_addr, in_len,
                                    hbuf, sizeof hbuf,
                                    sbuf, sizeof sbuf,
@@ -185,6 +206,7 @@ main (int argc, char *argv[])
                       printf("Accepted connection on descriptor %d "
                              "(host=%s, port=%s)\n", infd, hbuf, sbuf);
                     }
+#endif
 
                   /* Make the incoming socket non-blocking and add it to the
                    * list of fds to monitor. */
@@ -194,6 +216,7 @@ main (int argc, char *argv[])
 
                   event.data.fd = infd;
                   event.events = EPOLLIN | EPOLLET;
+printf("set events %u, infd=%d\n", event.events, infd);
                   s = epoll_ctl (efd, EPOLL_CTL_ADD, infd, &event);
                   if (s == -1)
                     {
@@ -201,7 +224,7 @@ main (int argc, char *argv[])
                       abort ();
                     }
                 }
-              continue;
+/*              continue; */
             }
           else
             {
@@ -237,8 +260,8 @@ main (int argc, char *argv[])
                       break;
                     }
 
-                  /* Write the buffer to connection */
-                  s = write (events[i].data.fd, buf, count);
+                  /* Write the reply to connection */
+                  s = write (events[i].data.fd, reply, sizeof(reply));
                   if (s == -1)
                     {
                       perror ("write");

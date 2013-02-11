@@ -1,5 +1,5 @@
 local ffi = require "ffi"
-require "socket-cdef"
+require "cdef/socket"
 local C = ffi.C
 
 local fd = C.socket(C.AF_INET, C.SOCK_STREAM, 0)
