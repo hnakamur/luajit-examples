@@ -21,11 +21,6 @@ typedef union epoll_data {
   uint64_t u64;
 } epoll_data_t;
 
-struct epoll_event {
-  uint32_t events;   /* Epoll events */
-  epoll_data_t data; /* User data variable */
-} __attribute__ ((__packed__));
-
 enum EPOLL_EVENTS {
   EPOLLIN = 0x001,
   EPOLLPRI = 0x002,
@@ -49,3 +44,4 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents,
     int timeout);
 ]]
 
+require("cdef." .. ffi.arch .. ".epoll")

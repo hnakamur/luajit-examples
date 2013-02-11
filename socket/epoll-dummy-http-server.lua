@@ -1,9 +1,9 @@
 local bir = require "bit"
 local ffi = require "ffi"
-require "cdef/socket"
-require "cdef/epoll"
-require "cdef/fcntl"
-require "cdef/errno"
+require "cdef.socket"
+require "cdef.epoll"
+require "cdef.fcntl"
+require "cdef.errno"
 local C = ffi.C
 
 local msg = [[
