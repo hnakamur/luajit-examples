@@ -67,7 +67,7 @@ assert(epfd ~= -1)
 
 local event = ffi.new("struct epoll_event[1]")
 event[0].events = bit.bor(C.EPOLLIN, C.EPOLLET)
-print("event[0].events", event[0].events, "listen_fd", listen_fd)
+--print("event[0].events", event[0].events, "listen_fd", listen_fd)
 event[0].data.fd = listen_fd
 rc = C.epoll_ctl(epfd, C.EPOLL_CTL_ADD, listen_fd, event)
 assert(rc ~= -1)
@@ -80,10 +80,10 @@ local buf = ffi.new("uint8_t[?]", BUFSIZE)
 
 while true do
   local nfds = C.epoll_wait(epfd, events, MAXEVENTS, -1)
-print("nfds", nfds)
+--print("nfds", nfds)
   assert(nfds ~= -1)
   for i = 0, nfds - 1 do
-print("i", i, "fd", events[i].data.fd, "events", events[i].events)
+--print("i", i, "fd", events[i].data.fd, "events", events[i].events)
     if bit.band(events[i].events, C.EPOLLIN) ~= 0 then
       if events[i].data.fd == listen_fd then
         while true do
@@ -101,7 +101,7 @@ print("i", i, "fd", events[i].data.fd, "events", events[i].events)
               break
             end
           end
-print("conn_fd", conn_fd)
+--print("conn_fd", conn_fd)
 
           rc = make_socket_non_blocking(conn_fd)
           assert(rc ~= -1)
@@ -132,7 +132,7 @@ print("conn_fd", conn_fd)
         end
 
         if done then
-          print("Closed connection on descriptor " .. events[i].data.fd)
+--          print("Closed connection on descriptor " .. events[i].data.fd)
 
           rc = C.close(events[i].data.fd)
           assert(rc ~= -1)
