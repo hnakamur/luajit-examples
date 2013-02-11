@@ -24,7 +24,7 @@ typedef union epoll_data {
 struct epoll_event {
   uint32_t events;   /* Epoll events */
   epoll_data_t data; /* User data variable */
-} /* __attribute__ ((__packed__)) */;
+} __attribute__ ((__packed__));
 
 enum EPOLL_EVENTS {
   EPOLLIN = 0x001,
